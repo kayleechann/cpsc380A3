@@ -18,7 +18,6 @@ struct my_msg_st {
     char some_text[MAX_TEXT];
 };
 
-
 int main()
 {
     int running = 1;
@@ -34,7 +33,8 @@ int main()
     }
 
     while(running) {
-        printf("Enter some text: ");
+        printf("msgq> ");
+        fflush(stdout);
         fgets(buffer, BUFSIZ, stdin);
         some_data.my_msg_type = 1;
         strcpy(some_data.some_text, buffer);
@@ -43,7 +43,7 @@ int main()
             fprintf(stderr, "msgsnd failed\n");
             exit(EXIT_FAILURE);
         }
-        if (strncmp(buffer, "end", 3) == 0) {
+        if (strncmp(buffer, "exit", 4) == 0 || strncmp(buffer, "quit", 4) == 0) {
             running = 0;
         }
     }
