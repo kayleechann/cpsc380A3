@@ -1,25 +1,31 @@
 /* Here's the receiver program. */
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
-
+#include <signal.h>
+#include <errno.h>
 #include <sys/msg.h>
+#include <signal.h>
 
+#define MAX_LINE     80 /* 80 chars per line, per command */
 
 struct my_msg_st {
     long int my_msg_type;
-    char some_text[BUFSIZ];
-};
+    char some_text[MAX_LINE];
+} msgbuff;
 
-int main()
+int main(int argc, char *argv[])
 {
     int running = 1;
     int msgid;
     struct my_msg_st some_data;
     long int msg_to_receive = 0;
+    char exitWord[5] = "exit";
+    char quitWord[5] = "quit";
 
 /* First, we set up the message queue. */
 
@@ -39,11 +45,31 @@ int main()
             fprintf(stderr, "msgrcv failed with error: %d\n", errno);
             exit(EXIT_FAILURE);
         }
-        printf("You wrote: %s", some_data.some_text);
-        if (strncmp(some_data.some_text, "end", 3) == 0) {
-            running = 0;
+
+        //get out of program if input is quit or exit
+        if((strncmp(some_data.some_text, exitWord, 4) == 0) | (strncmp(some_data.some_text, quitWord ,4) == 0)){
+        running = 0;
+        }else{
+           printf("You wrote: %s", some_data.some_text);
+            int i;
+            printf ("Processor status: ");
+            if (system(NULL))
+                puts ("Ready");
+            else exit (EXIT_FAILURE);
+                printf ("Executing command: %s \n", some_data.some_text);
+
+            i = system(some_data.some_text);
+            if (i == 0){
+                printf ("System call executed successfully\n");
+            }
+            else{
+                printf("System call failed\n");
+            }
+            
         }
+
     }
+
 
     if (msgctl(msgid, IPC_RMID, 0) == -1) {
         fprintf(stderr, "msgctl(IPC_RMID) failed\n");
@@ -51,4 +77,5 @@ int main()
     }
 
     exit(EXIT_SUCCESS);
+    return 0;
 }
