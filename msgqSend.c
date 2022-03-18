@@ -18,6 +18,7 @@ struct my_msg_st {
     char some_text[MAX_TEXT];
 };
 
+
 int main()
 {
     int running = 1;
