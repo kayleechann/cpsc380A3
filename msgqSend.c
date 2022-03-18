@@ -18,14 +18,23 @@ struct my_msg_st {
     char some_text[MAX_TEXT];
 };
 
-int main()
+int main(int argc, char *argv[])
 {
     int running = 1;
     struct my_msg_st some_data;
     int msgid;
     char buffer[BUFSIZ];
 
-    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);
+    if (argc == 1){
+        printf("Please enter filename\n");
+        exit(0);
+    }
+
+    key_t key; /* message queue key */
+    key = ftok(argv[1], 'q');
+
+
+    msgid = msgget(key, 0666 | IPC_CREAT);
 
     if (msgid == -1) {
         fprintf(stderr, "msgget failed with error: %d\n", errno);
