@@ -1,5 +1,4 @@
 /* Here's the receiver program. */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,16 +10,15 @@
 #include <sys/msg.h>
 #include <signal.h>
 
-#define MAX_LINE     80 /* 80 chars per line, per command */
+#define MAX_LINE 80 /* 80 chars per line, per command */
 
 struct my_msg_st {
     long int my_msg_type;
     char some_text[MAX_LINE];
-} ;
+};
 
 int main(int argc, char *argv[])
 {
-    printf("started\n");
     int running = 1;
     int msgid;
     struct my_msg_st some_data;
@@ -29,12 +27,10 @@ int main(int argc, char *argv[])
     char quitWord[5] = "quit";
 
 /* First, we set up the message queue. */
-    key_t key; /* message queue key */
+    key_t key; 
     key = ftok(argv[1], 'q');
     msgid = msgget(key, 0666 | IPC_CREAT);
-    printf("message created\n");
-    printf("msgid: %d", msgid);
-    printf("\n");
+
     if (msgid == -1) {
         fprintf(stderr, "msgget failed with error: %d\n", errno);
         exit(EXIT_FAILURE);
@@ -49,31 +45,29 @@ int main(int argc, char *argv[])
             fprintf(stderr, "msgrcv failed with error: %d\n", errno);
             exit(EXIT_FAILURE);
         }
-        printf("msg received, parsing...\n");
-        //get out of program if input is quit or exit
+        
+        // break out of program if exit or quit is entered
         if((strncmp(some_data.some_text, exitWord, 4) == 0) | (strncmp(some_data.some_text, quitWord ,4) == 0)){
         running = 0;
-        }else{
-           printf("You wrote: %s", some_data.some_text);
-            int i;
-            printf ("Processor status: ");
-            if (system(NULL))
-                puts ("Ready");
-            else exit (EXIT_FAILURE);
-                printf ("Executing command: %s \n", some_data.some_text);
+        }
+        // else run the system command from message queue
+        else{
+            printf("\n"); 
+            if (system(NULL)){
+                printf("Ready to run: %s \n", some_data.some_text);
+            }
+             else {
+                exit(EXIT_FAILURE);
+             }
 
-            i = system(some_data.some_text);
-            if (i == 0){
-                printf ("System call executed successfully\n");
+            if (system(some_data.some_text) != 0){
+                printf("System command failed\n");
             }
             else{
-                printf("System call failed, returned %d \n", i);
-            }
-            
+                printf("System command was successful! \n");
+            }  
         }
-
     }
-
 
     if (msgctl(msgid, IPC_RMID, 0) == -1) {
         fprintf(stderr, "msgctl(IPC_RMID) failed\n");
